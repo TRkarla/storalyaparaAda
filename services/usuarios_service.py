@@ -24,6 +24,7 @@ from database.database_usuarios import (
 )
 from models.usuario import Usuario
 from utils.validators import validar_email, validar_password
+from utils.constants import ESTADO_PERMITIDO, CIUDADES_PERMITIDAS
 
 
 # ─── Helpers internos de password ─────────────────────────────────
@@ -60,13 +61,13 @@ def _get_session() -> Session:
 
 def registrar_usuario(
     nombre_usuario: str,
-    email: str,
-    password_plano: str,
-    edad: int,
-    genero: str,
-    ciudad: str,
-    estado: str,
-    telefono: str = "",    # ← NUEVO
+    email: str = "",
+    telefono: str = "",
+    password_plano: str = "",
+    edad: int = 0,
+    genero: str = "",
+    ciudad: str = "",
+    estado: str = "",
 ) -> dict:
     """
     Registra un nuevo usuario en STORALYA.
@@ -92,16 +93,45 @@ def registrar_usuario(
     if len(nombre_usuario) > 50:
         return {"ok": False, "error": "El nombre de usuario no puede superar 50 caracteres"}
 
-    if not validar_email(email):
-        return {"ok": False, "error": "El formato del email no es válido"}
+    contacto = email or telefono
+
+    if not contacto:
+        return {
+        "ok": False,
+        "error": "Ingresa tu email o número de teléfono"
+    }
+
+    if email and not validar_email(email):
+        return {
+        "ok": False,
+        "error": "El formato del email no es válido"
+    }
+
+    if telefono:
+        if not telefono.isdigit() or len(telefono) != 10:
+            return {
+            "ok": False,
+            "error": "El teléfono debe contener 10 dígitos"
+        }
 
     es_valida, msg_error = validar_password(password_plano)
     if not es_valida:
         return {"ok": False, "error": msg_error}
 
-    if not isinstance(edad, int) or edad < 13 or edad > 120:
-        return {"ok": False, "error": "La edad debe estar entre 13 y 120 años"}
+    if not isinstance(edad, int) or edad < 16 or edad > 27:
+        return {"ok": False, "error": "Storalya es para usuarios de 16 a 27 años"}
 
+    CIUDADES_PERMITIDAS = {"Orizaba", "Río Blanco"}
+    ESTADO_PERMITIDO    = "Veracruz"
+
+    if estado.strip() != ESTADO_PERMITIDO:
+        return {"ok": False, "error": "Storalya solo está disponible en Veracruz"}
+
+    if ciudad.strip() not in CIUDADES_PERMITIDAS:
+        return {
+            "ok": False,
+            "error": "Storalya solo acepta usuarios de Orizaba y Río Blanco, Veracruz"
+    }
     # ── Hashear password ANTES de guardar ─────────────────────────
     password_hash = _hashear_password(password_plano)
 
@@ -109,16 +139,16 @@ def registrar_usuario(
     db = _get_session()
     try:
         usuario = crear_usuario(
-    db=db,
-    nombre_usuario=nombre_usuario.strip(),
-    email=email.strip().lower(),
-    password_hash=password_hash,
-    edad=edad,
-    genero=genero,
-    ciudad=ciudad,
-    estado=estado,
-    telefono=telefono,    # ← NUEVO
-)
+            db=db,
+            nombre_usuario=nombre_usuario.strip(),
+            email=email.strip().lower() if email else "",
+            telefono=telefono,
+            password_hash=password_hash,
+            edad=edad,
+            genero=genero,
+            ciudad=ciudad,
+            estado=estado,
+        )
 
         if usuario is None:
             # crear_usuario retorna None cuando hay duplicado

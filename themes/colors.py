@@ -3,7 +3,7 @@
 # ─── Paleta principal ─────────────────────────────────────────────
 VERDE_AGUA    = "#A1CACF"   # Azul verdoso pastel — acentos, íconos activos
 LAVANDA       = "#ABA4C6"   # Morado claro — botones primarios, headers
-MALVA         = "#CCA9C6"   # Rosa-morado — botones secundarios, tags
+MALVA   = "#CCA9C6"   # Rosa-morado suave
 ROSA          = "#F0BFCE"   # Rosa pastel — fondos de tarjetas, hover
 DURAZNO       = "#FADBCE"   # Melocotón pastel — fondos alternativos, chips
 

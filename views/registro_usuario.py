@@ -2,6 +2,7 @@
 import flet as ft
 from services.usuarios_service import registrar_usuario
 from services.auth_service import iniciar_sesion
+from utils.constants import ESTADO_PERMITIDO, CIUDADES_PERMITIDAS
 from themes.styles import (
     input_redondeado, boton_primario,
     boton_secundario, texto_titulo,
@@ -9,18 +10,10 @@ from themes.styles import (
 )
 from themes.colors import LAVANDA, TEXTO_PRINCIPAL, TEXTO_SECUNDARIO, BORDE_INPUT, FONDO_INPUT
 
-ESTADOS_MX = [
-    "Aguascalientes", "Baja California", "Baja California Sur",
-    "Campeche", "Chiapas", "Chihuahua", "Ciudad de México",
-    "Coahuila", "Colima", "Durango", "Guanajuato", "Guerrero",
-    "Hidalgo", "Jalisco", "México", "Michoacán", "Morelos",
-    "Nayarit", "Nuevo León", "Oaxaca", "Puebla", "Querétaro",
-    "Quintana Roo", "San Luis Potosí", "Sinaloa", "Sonora",
-    "Tabasco", "Tamaulipas", "Tlaxcala", "Veracruz", "Yucatán",
-    "Zacatecas",
-]
 
-GENEROS = ["Masculino", "Femenino", "No binario", "Prefiero no decir"]
+CIUDADES_PERMITIDAS = ["Orizaba", "Río Blanco"]
+
+GENEROS = ["Masculino", "Femenino", "Prefiero no decir"]
 
 AVISO_TEXTO = (
     "Para mantener nuestra comunidad segura, al registrarte aceptas cumplir con las siguientes normas:\n\n"
@@ -63,27 +56,10 @@ def registro_view(page: ft.Page, ir_a_login, ir_a_home):
         hint="Crea tu nombre de usuario",
         icono="person_outline",
     )
-    campo_email = input_redondeado(
-        "Email",
-        hint="tucorreo@ejemplo.com",
-        icono="email_outlined",
-    )
-    campo_telefono = ft.TextField(
-    label="Número de teléfono",
-    hint_text="10 dígitos",
-    keyboard_type=ft.KeyboardType.PHONE,
-    border_radius=20,
-    border_color=BORDE_INPUT,
-    focused_border_color=LAVANDA,
-    bgcolor="#FFFFFF",
-    label_style=ft.TextStyle(
-        color=TEXTO_SECUNDARIO,
-        weight=ft.FontWeight.BOLD,
-    ),
-    text_style=ft.TextStyle(color=TEXTO_PRINCIPAL),
-    filled=True,
-    prefix_icon="phone_outlined",
-    max_length=10,
+    campo_contacto = input_redondeado(
+        "Email o número de teléfono",
+        hint="Gmail o 10 dígitos",
+        icono="contact_mail_outlined",
     )
     campo_password = input_redondeado(
         "Contraseña",
@@ -110,11 +86,26 @@ def registro_view(page: ft.Page, ir_a_login, ir_a_home):
     campo_genero = _dropdown_claro("Género:", GENEROS)
 
     # ── Campos paso 2 ─────────────────────────────────────────────
-    campo_estado = _dropdown_claro("Estado:", ESTADOS_MX)
-    campo_ciudad = input_redondeado(
-        "Ciudad",
-        hint="Ingresa tu ciudad",
-        icono="location_city_outlined",
+    campo_estado = ft.TextField(
+        label="Estado:",
+        value="Veracruz",
+        read_only=True,           # ← no editable, siempre Veracruz
+        border_radius=20,
+        border_color=BORDE_INPUT,
+        focused_border_color=LAVANDA,
+        bgcolor="#FFFFFF",
+        label_style=ft.TextStyle(
+            color=TEXTO_SECUNDARIO,
+            weight=ft.FontWeight.BOLD,
+        ),
+        text_style=ft.TextStyle(color=TEXTO_PRINCIPAL),
+        filled=True,
+        prefix_icon="location_on_outlined",
+    )
+
+    campo_ciudad = _dropdown_claro(
+        "Ciudad:",
+        CIUDADES_PERMITIDAS,
     )
 
     msg_error = texto_error("")
@@ -137,27 +128,30 @@ def registro_view(page: ft.Page, ir_a_login, ir_a_home):
             return "El nombre de usuario es obligatorio"
         if len(campo_nombre.value.strip()) < 3:
             return "El nombre debe tener al menos 3 caracteres"
-        if not campo_email.value or "@" not in campo_email.value:
-            return "Ingresa un email válido"
-        if not campo_telefono.value or not campo_telefono.value.isdigit():
-            return "Ingresa un número de teléfono válido"
-        if len(campo_telefono.value) != 10:
-            return "El teléfono debe tener exactamente 10 dígitos"
+
+        contacto = campo_contacto.value.strip() if campo_contacto.value else ""
+        if not contacto:
+            return "Ingresa tu email o número de teléfono"
+        es_email = "@" in contacto
+        es_telefono = contacto.isdigit() and len(contacto) == 10
+        if not es_email and not es_telefono:
+            return "Ingresa un email válido o un número de 10 dígitos"
+
         if not campo_password.value or len(campo_password.value) < 8:
             return "La contraseña debe tener al menos 8 caracteres"
         if not campo_edad.value or not campo_edad.value.isdigit():
             return "Ingresa una edad válida"
-        if int(campo_edad.value) < 16 or int(campo_edad.value) > 27:   # ← cambiado
+        if int(campo_edad.value) < 16 or int(campo_edad.value) > 27:
             return "Storalya es para usuarios de 16 a 27 años"
         if not campo_genero.value:
             return "Selecciona tu género"
         return None
 
     def validar_paso_2():
-        if not campo_estado.value:
-            return "Selecciona tu estado"
-        if not campo_ciudad.value or not campo_ciudad.value.strip():
-            return "Ingresa tu ciudad"
+        if not campo_ciudad.value:
+            return "Selecciona tu ciudad"
+        if campo_ciudad.value not in CIUDADES_PERMITIDAS:
+            return "Solo se aceptan usuarios de Orizaba y Río Blanco, Veracruz"
         return None
 
     # ── Navegación ────────────────────────────────────────────────
@@ -185,15 +179,18 @@ def registro_view(page: ft.Page, ir_a_login, ir_a_home):
             page.update()
             return
 
+        contacto = campo_contacto.value.strip()
+        es_email = "@" in contacto
+
         resultado = registrar_usuario(
             nombre_usuario=campo_nombre.value.strip(),
-            email=campo_email.value.strip().lower(),
+            email=contacto if es_email else "",
+            telefono=contacto if not es_email else "",
             password_plano=campo_password.value,
             edad=int(campo_edad.value),
             genero=campo_genero.value,
             ciudad=campo_ciudad.value.strip(),
-            estado=campo_estado.value,
-            telefono=campo_telefono.value.strip(),
+            estado="Veracruz",     # ← siempre Veracruz, no viene de un campo editable
         )
 
         if resultado["ok"]:
@@ -207,39 +204,37 @@ def registro_view(page: ft.Page, ir_a_login, ir_a_home):
     # ── Paso 1 ────────────────────────────────────────────────────
     def construir_paso_1():
         return ft.Column(
-        controls=[
-            ft.Container(height=16),
-            logo,
-            ft.Container(height=16),
-            texto_titulo("Registro:\nDatos Personales", size=24),
-            ft.Container(height=24),
-            campo_nombre,
-            ft.Container(height=12),
-            campo_email,
-            ft.Container(height=12),
-            campo_telefono,        # ← NUEVO
-            ft.Container(height=12),
-            campo_password,
-            ft.Container(height=12),
-            campo_edad,
-            ft.Container(height=12),
-            campo_genero,
-            ft.Container(height=8),
-            msg_error,
-            ft.Container(height=20),
-            ft.Row(
-                controls=[
-                    boton_secundario("← Atrás", lambda _: ir_a_login()),
-                    boton_primario("Seguir →", ir_paso_2),
-                ],
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            ),
-            ft.Container(height=24),
-        ],
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        spacing=0,
-        scroll=ft.ScrollMode.AUTO,
-    )
+            controls=[
+                ft.Container(height=16),
+                logo,
+                ft.Container(height=16),
+                texto_titulo("Registro:\nDatos Personales", size=24),
+                ft.Container(height=24),
+                campo_nombre,
+                ft.Container(height=12),
+                campo_contacto,
+                ft.Container(height=12),
+                campo_password,
+                ft.Container(height=12),
+                campo_edad,
+                ft.Container(height=12),
+                campo_genero,
+                ft.Container(height=8),
+                msg_error,
+                ft.Container(height=20),
+                ft.Row(
+                    controls=[
+                        boton_secundario("← Atrás", lambda _: ir_a_login()),
+                        boton_primario("Seguir →", ir_paso_2),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+                ft.Container(height=24),
+            ],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=0,
+            scroll=ft.ScrollMode.AUTO,
+        )
 
     # ── Paso 2 ────────────────────────────────────────────────────
     def construir_paso_2():

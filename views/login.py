@@ -2,104 +2,100 @@
 import flet as ft
 from services.usuarios_service import login_usuario
 from services.auth_service import iniciar_sesion
-from themes.styles import (
-    input_redondeado, boton_primario, boton_secundario,
-    texto_titulo, texto_subtitulo, texto_error,
-    GRADIENTE_FONDO,
-)
-from themes.colors import FONDO_APP, TEXTO_SECUNDARIO, LAVANDA
+from themes.colors import LAVANDA, TEXTO_PRINCIPAL, TEXTO_SECUNDARIO, BORDE_INPUT, FONDO_INPUT
 
-def login_view(page, ir_a_registro, ir_a_home):
-    """
-    Pantalla de inicio de sesión.
 
-    Args:
-        page:           instancia de la página Flet
-        ir_a_registro:  función que navega a registro
-        ir_a_home:      función que navega al home tras login exitoso
-    """
+def login_view(page: ft.Page, ir_a_registro, ir_a_home) -> ft.Column:
+    w = int(page.window.width or 390)
+    h = int(page.window.height or 844)
 
-    # ─── Campos ───────────────────────────────────────────────────
-    campo_email = input_redondeado(
-        "Email o nombre de usuario",
-        hint="Ingresa tu email o usuario",
-        icono="person_outline",
+    campo_contacto = ft.TextField(
+        label="Email o número de teléfono",
+        hint_text="tucorreo@email.com o 10 dígitos",
+        prefix_icon="person_outline",
+        border_radius=20, border_color=BORDE_INPUT,
+        focused_border_color=LAVANDA, bgcolor=FONDO_INPUT, filled=True,
+        label_style=ft.TextStyle(color=TEXTO_SECUNDARIO, weight=ft.FontWeight.BOLD),
+        text_style=ft.TextStyle(color=TEXTO_PRINCIPAL), cursor_color=LAVANDA,
     )
-    campo_password = input_redondeado(
-        "Contraseña",
-        hint="Ingresa tu contraseña",
-        password=True,
-        icono="lock_outline",
+    campo_password = ft.TextField(
+        label="Contraseña", hint_text="Tu contraseña",
+        prefix_icon="lock_outline", password=True, can_reveal_password=True,
+        border_radius=20, border_color=BORDE_INPUT,
+        focused_border_color=LAVANDA, bgcolor=FONDO_INPUT, filled=True,
+        label_style=ft.TextStyle(color=TEXTO_SECUNDARIO, weight=ft.FontWeight.BOLD),
+        text_style=ft.TextStyle(color=TEXTO_PRINCIPAL), cursor_color=LAVANDA,
     )
-    mensaje_error = texto_error("")
+    msg_error = ft.Text("", size=12, color="#E07B8A", visible=False)
 
-    # ─── Lógica ───────────────────────────────────────────────────
     def handle_login(e):
-        mensaje_error.visible = False
-        campo_email.border_color = None
-        campo_password.border_color = None
-
-        email    = campo_email.value.strip()
-        password = campo_password.value
-
-        if not email or not password:
-            mensaje_error.value   = "Completa todos los campos"
-            mensaje_error.visible = True
+        msg_error.visible = False
+        contacto = campo_contacto.value.strip() if campo_contacto.value else ""
+        password  = campo_password.value
+        if not contacto or not password:
+            msg_error.value = "Completa todos los campos"
+            msg_error.visible = True
             page.update()
             return
-
-        resultado = login_usuario(email, password)
-
+        resultado = login_usuario(contacto, password)
         if resultado["ok"]:
             iniciar_sesion(resultado["usuario"])
             ir_a_home()
         else:
-            mensaje_error.value   = resultado["error"]
-            mensaje_error.visible = True
-            campo_password.value  = ""
+            msg_error.value = resultado["error"]
+            msg_error.visible = True
+            campo_password.value = ""
             page.update()
 
-    # ─── UI ───────────────────────────────────────────────────────
-    logo = ft.Image(
-        src="assets/logo/logo.png",
-        width=180,
-        fit="contain",
-    )
-
-    contenido = ft.Column(
-        controls=[
-            ft.Container(height=20),
-            logo,
-            ft.Container(height=8),
-            texto_titulo("Bienvenido de vuelta", size=22),
-            texto_subtitulo("Lectura que conecta, Historias que permanecen."),
-            ft.Container(height=24),
-            campo_email,
-            ft.Container(height=12),
-            campo_password,
-            ft.Container(height=4),
-            mensaje_error,
-            ft.Container(height=20),
-            boton_primario("Inicia sesión →", handle_login),
-            ft.Container(height=12),
-            boton_secundario("Crear cuenta →", lambda _: ir_a_registro()),
-            ft.Container(height=24),
-            ft.TextButton(
-                "¿Olvidaste tu contraseña?",
-                style=ft.ButtonStyle(color=TEXTO_SECUNDARIO),
-            ),
-        ],
+    return ft.Column(
+        width=w, height=h,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         spacing=0,
         scroll=ft.ScrollMode.AUTO,
-    )
-
-    return ft.Container(
-        expand=True,
-        gradient=GRADIENTE_FONDO,   # ← aquí
-        content=ft.Container(
-            content=contenido,
-            padding=ft.Padding(left=32, right=32, top=24, bottom=24),
-            expand=True,
-        ),
+        controls=[
+            ft.Container(height=32),
+            ft.Image(src="assets/logo/logo.png", width=160, fit="contain"),
+            ft.Container(height=8),
+            ft.Text("Bienvenido de vuelta", size=22, weight=ft.FontWeight.BOLD,
+                    color=TEXTO_PRINCIPAL, text_align=ft.TextAlign.CENTER),
+            ft.Text("Lectura que conecta, historias que permanecen.",
+                    size=13, color=TEXTO_SECUNDARIO, text_align=ft.TextAlign.CENTER),
+            ft.Container(height=24),
+            campo_contacto,
+            ft.Container(height=12),
+            campo_password,
+            ft.Container(height=4),
+            msg_error,
+            ft.Container(height=20),
+            ft.GestureDetector(
+                on_tap=handle_login,
+                content=ft.Container(
+                    content=ft.Text("Inicia sesión →", color="#FFF", size=15,
+                                    weight=ft.FontWeight.W_500,
+                                    text_align=ft.TextAlign.CENTER),
+                    bgcolor=LAVANDA, border_radius=30,
+                    padding=ft.Padding(left=32, right=32, top=14, bottom=14),
+                    width=w - 64,
+                ),
+            ),
+            ft.Container(height=12),
+            ft.GestureDetector(
+                on_tap=lambda e: ir_a_registro(),
+                content=ft.Container(
+                    content=ft.Text("Crear cuenta →", color=TEXTO_PRINCIPAL, size=15,
+                                    weight=ft.FontWeight.W_500,
+                                    text_align=ft.TextAlign.CENTER),
+                    border=ft.Border(
+                        top=ft.BorderSide(1.5, BORDE_INPUT),
+                        bottom=ft.BorderSide(1.5, BORDE_INPUT),
+                        left=ft.BorderSide(1.5, BORDE_INPUT),
+                        right=ft.BorderSide(1.5, BORDE_INPUT),
+                    ),
+                    border_radius=30, bgcolor="#FFFFFF",
+                    padding=ft.Padding(left=32, right=32, top=14, bottom=14),
+                    width=w - 64,
+                ),
+            ),
+            ft.Container(height=24),
+        ],
     )

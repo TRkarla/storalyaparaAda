@@ -19,18 +19,19 @@ def crear_usuario(
     genero: str,
     ciudad: str,
     estado: str,
-    telefono: str = "",    # ← NUEVO
+    telefono: str = "",
 ) -> Usuario | None:
     try:
         nuevo = Usuario(
             nombre_usuario=nombre_usuario,
-            email=email,
+            email=email if email else None,       # ← None en lugar de ""
+            telefono=telefono if telefono else None,  # ← None en lugar de ""
             password=password_hash,
             edad=edad,
             genero=genero,
             ciudad=ciudad,
             estado=estado,
-            telefono=telefono,    # ← NUEVO
+            activo=True,
         )
         db.add(nuevo)
         db.commit()

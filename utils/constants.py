@@ -17,3 +17,5 @@ ESTADOS_RETO = ["activo", "completado", "expirado"]
 MAX_DESCRIPCION_LIBRO = 500   # caracteres
 MAX_CONTENIDO_POEMA   = 3000  # caracteres
 MAX_IMAGENES_LIBRO    = 5
+ESTADO_PERMITIDO   = "Veracruz"
+CIUDADES_PERMITIDAS = ["Orizaba", "Río Blanco"]

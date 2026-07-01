@@ -11,8 +11,8 @@ class Usuario(Base):
     # ─── Campos de identidad ──────────────────────────────────────
     id               = Column(Integer, primary_key=True, index=True)
     nombre_usuario   = Column(String(50),  unique=True, index=True, nullable=False)
-    email            = Column(String(150), unique=True, index=True, nullable=False)
-    telefono = Column(String(10), nullable=True)
+    email    = Column(String(150), unique=True, index=True, nullable=True)
+    telefono = Column(String(10),  unique=True, index=True, nullable=True)
     password         = Column(String(255), nullable=False)  # hasheda con bcrypt
 
     # ─── Campos de perfil ─────────────────────────────────────────
