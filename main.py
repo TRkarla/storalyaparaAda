@@ -7,12 +7,12 @@ from views.poems import poems_view
 
 
 def main(page: ft.Page):
-    page.title            = "STORALYA"
-    page.bgcolor          = "#F0EBF5"
-    page.padding          = 0
-    page.spacing          = 0
-    page.window.width     = 390
-    page.window.height    = 844
+    page.title        = "STORALYA"
+    page.bgcolor      = "#F7F0F5"
+    page.padding      = 0
+    page.spacing      = 0
+    page.window.width  = 390
+    page.window.height = 844
     page.window.resizable = False
 
     vista_actual = ["splash"]

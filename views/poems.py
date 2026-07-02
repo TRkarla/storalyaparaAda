@@ -58,14 +58,11 @@ def poems_view(page: ft.Page, navegador: dict, w: int = 390, h: int = 844) -> ft
 
         menu = ft.PopupMenuButton(
             icon="more_horiz", icon_color=TEXTO_SECUNDARIO, icon_size=18,
-            items=[ft.PopupMenuItem(
-                text="Eliminar", icon="delete_outline",
-                on_click=pedir_eliminar,
-            )],
+            items=[ft.PopupMenuItem(text="Eliminar", icon="delete_outline",
+                                    on_click=pedir_eliminar)],
         ) if es_mio else ft.Container(width=24)
 
         return ft.Container(
-            width=w - 32,
             bgcolor=FONDO_TARJETA,
             border_radius=16,
             padding=16,
@@ -234,9 +231,7 @@ def poems_view(page: ft.Page, navegador: dict, w: int = 390, h: int = 844) -> ft
     construir_filtros()
     cargar()
 
-    # ── Navbar superior ──────────────────────────────────────────
     navbar_top = ft.Container(
-        width=w,
         bgcolor=FONDO_APP,
         padding=ft.Padding(left=16, right=16, top=12, bottom=8),
         content=ft.Row(
@@ -263,9 +258,7 @@ def poems_view(page: ft.Page, navegador: dict, w: int = 390, h: int = 844) -> ft
         ),
     )
 
-    # ── Header muro ──────────────────────────────────────────────
     header_muro = ft.Container(
-        width=w,
         padding=ft.Padding(left=16, right=16, top=8, bottom=4),
         content=ft.Column(controls=[
             ft.Row(
@@ -294,14 +287,13 @@ def poems_view(page: ft.Page, navegador: dict, w: int = 390, h: int = 844) -> ft
         ], spacing=0),
     )
 
-    # ── Bottom nav ───────────────────────────────────────────────
     def item_nav(icono, label, clave):
         activo = clave == "poemas"
         color  = LAVANDA if activo else TEXTO_SECUNDARIO
 
         if clave == "publicar":
             return ft.GestureDetector(
-                on_tap=abrir_publicar,
+                on_tap=lambda e: abrir_publicar(e),
                 content=ft.Column(controls=[
                     ft.Container(
                         content=ft.Icon("edit_outlined", color="#FFF", size=20),
@@ -324,7 +316,6 @@ def poems_view(page: ft.Page, navegador: dict, w: int = 390, h: int = 844) -> ft
         )
 
     nav_bottom = ft.Container(
-        width=w,
         bgcolor="#FFFFFF",
         padding=ft.Padding(left=8, right=8, top=10, bottom=20),
         border=ft.Border(
